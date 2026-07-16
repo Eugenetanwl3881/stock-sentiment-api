@@ -1,0 +1,23 @@
+# FastAPI + Server
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+
+# Database
+sqlalchemy==2.0.36
+aiosqlite==0.20.0
+
+# Scheduling
+apscheduler==3.10.4
+
+# Config
+pydantic-settings==2.7.0
+python-dotenv==1.0.1
+
+# Yahoo Finance (fundamentals)
+yfinance==0.2.51
+
+# NLP / Sentiment
+nltk==3.9.1
+
+# HTTP (async) — for Reddit JSON endpoints
+httpx==0.28.1
