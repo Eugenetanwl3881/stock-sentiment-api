@@ -4,15 +4,15 @@ Scrapes Reddit's r/valueinvesting, extracts stock tickers, analyzes sentiment, p
 
 ## Tech Stack
 
-| Layer | Technology |
-|-------|-----------|
-| Framework | FastAPI |
-| Database | SQLite + SQLAlchemy |
-| Scraping | httpx (Reddit public `.json` API) |
-| Sentiment | NLTK VADER |
-| Fundamentals | yfinance |
-| Scheduling | APScheduler |
-| Config | pydantic-settings |
+| Layer        | Technology                        |
+| ------------ | --------------------------------- |
+| Framework    | FastAPI                           |
+| Database     | SQLite + SQLAlchemy               |
+| Scraping     | httpx (Reddit public `.json` API) |
+| Sentiment    | NLTK VADER                        |
+| Fundamentals | yfinance                          |
+| Scheduling   | APScheduler                       |
+| Config       | pydantic-settings                 |
 
 ## Getting Started
 
