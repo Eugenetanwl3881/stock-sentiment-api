@@ -8,7 +8,8 @@ import requests
 from sqlalchemy.orm import Session
 
 from app.config import settings
-from app.models.stock import Post
+from app.models.stock import Post, StockMention
+from app.services.ticker_extractor import extract_ticker_mentions
 
 logger = logging.getLogger(__name__)
 REDDIT_BASE = "https://old.reddit.com"
@@ -76,7 +77,19 @@ def scrape_subreddit(db: Session) -> int:
         if existing:
             continue
 
-        db.add(Post(**parsed))
+        post = Post(**parsed)
+        post_text = " ".join(filter(None, [post.title, post.body]))
+        mentions = extract_ticker_mentions(post_text)
+        if mentions:
+            for mention in mentions:
+                post.mentions.append(
+                    StockMention(
+                        ticker=mention["ticker"],
+                        mention_count=mention["count"],
+                    )
+                )
+
+        db.add(post)
         saved_count += 1
 
     db.commit()

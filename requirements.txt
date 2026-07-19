@@ -19,5 +19,8 @@ yfinance==0.2.51
 # NLP / Sentiment
 nltk==3.9.1
 
+# HTTP (sync) — for ticker validation and Reddit requests
+requests==2.32.3
+
 # HTTP (async) — for Reddit JSON endpoints
 httpx==0.28.1
