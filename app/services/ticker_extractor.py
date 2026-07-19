@@ -54,7 +54,7 @@ _STOPWORDS: FrozenSet[str] = frozenset({
 
 _CACHE_DIR = Path(__file__).resolve().parent.parent.parent / "data"
 _CACHE_PATH = _CACHE_DIR / "tickers.json"
-_CACHE_TTL = timedelta(days=1)
+_CACHE_TTL = timedelta(days=30)
 _SP500_URL = (
     "https://raw.githubusercontent.com/datasets/"
     "s-and-p-500-companies/refs/heads/main/data/constituents.csv"
@@ -66,6 +66,7 @@ def _download_sp500_tickers() -> set[str]:
     tickers: set[str] = set()
     try:
         response = requests.get(_SP500_URL, timeout=30)
+        print(response.text)
         response.raise_for_status()
         reader = csv.reader(io.StringIO(response.text))
         next(reader)  # skip header
