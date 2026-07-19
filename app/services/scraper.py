@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 from app.config import settings
 from app.models.stock import Post, StockMention
 from app.services.ticker_extractor import extract_ticker_mentions
+from app.services.sentiment import analyze_sentiment
 
 logger = logging.getLogger(__name__)
 REDDIT_BASE = "https://old.reddit.com"
@@ -80,12 +81,14 @@ def scrape_subreddit(db: Session) -> int:
         post = Post(**parsed)
         post_text = " ".join(filter(None, [post.title, post.body]))
         mentions = extract_ticker_mentions(post_text)
+        sentiment_score = analyze_sentiment(post_text) if mentions else None
         if mentions:
             for mention in mentions:
                 post.mentions.append(
                     StockMention(
                         ticker=mention["ticker"],
                         mention_count=mention["count"],
+                        sentiment_score=sentiment_score,
                     )
                 )
 
