@@ -67,3 +67,28 @@ class ScrapeLog(Base):
 
     def __repr__(self) -> str:
         return f"<ScrapeLog {self.scraped_at}: {self.status}>"
+
+
+class StockFundamentals(Base):
+    """One row per distinct ticker. Refreshed periodically via aggregation step."""
+
+    __tablename__ = "stock_fundamentals"
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    ticker: Mapped[str] = mapped_column(String(10), unique=True, index=True)
+    pe_ratio: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    forward_pe: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    pb_ratio: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    debt_to_equity: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    revenue_growth: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    profit_margins: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    roe: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    market_cap: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    sector: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    fundamentals_score: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    updated_at: Mapped[datetime] = mapped_column(
+        default=lambda: datetime.now(timezone.utc),
+    )
+
+    def __repr__(self) -> str:
+        return f"<StockFundamentals {self.ticker}: score={self.fundamentals_score}>"

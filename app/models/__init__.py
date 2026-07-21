@@ -1,3 +1,3 @@
-from app.models.stock import Post, StockMention, ScrapeLog
+from app.models.stock import Post, StockMention, ScrapeLog, StockFundamentals
 
-__all__ = ["Post", "StockMention", "ScrapeLog"]
+__all__ = ["Post", "StockMention", "ScrapeLog", "StockFundamentals"]
