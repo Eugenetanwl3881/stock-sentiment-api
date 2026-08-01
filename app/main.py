@@ -10,10 +10,11 @@ from app.scheduler import start_scheduler
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Start scheduler on boot, clean up on shutdown."""
-    Base.metadata.create_all(bind=engine)
-    start_scheduler()
-    yield
+    # ── STARTUP ──
+    Base.metadata.create_all(bind=engine)   # create tables if missing
+    start_scheduler()                        # start background jobs
+    yield  
+    # ── SHUTDOWN ──
 
 
 app = FastAPI(
