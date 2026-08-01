@@ -65,3 +65,26 @@ def ticker_detail(ticker: str, db: Session = Depends(get_db)):
             for p in posts
         ],
     }
+
+
+@router.get("/{ticker}/fundamentals")
+def ticker_fundamentals(ticker: str, db: Session = Depends(get_db)):
+    """Return raw fundamentals data for a single ticker."""
+    t = ticker.upper()
+    row = db.query(StockFundamentals).filter(StockFundamentals.ticker == t).first()
+    if not row:
+        raise HTTPException(status_code=404, detail=f"No fundamentals found for {t}")
+    return {
+        "ticker": row.ticker,
+        "pe_ratio": row.pe_ratio,
+        "forward_pe": row.forward_pe,
+        "pb_ratio": row.pb_ratio,
+        "debt_to_equity": row.debt_to_equity,
+        "revenue_growth": row.revenue_growth,
+        "profit_margins": row.profit_margins,
+        "roe": row.roe,
+        "market_cap": row.market_cap,
+        "sector": row.sector,
+        "fundamentals_score": row.fundamentals_score,
+        "updated_at": row.updated_at.isoformat() if row.updated_at else None,
+    }
