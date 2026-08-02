@@ -32,6 +32,12 @@ class Settings(BaseSettings):
     port: int = 8000
     debug: bool = True
 
+    # ── LLM Ticker Extraction ─────────────────────
+    # Set opencode_api_key in .env to enable LLM-based extraction
+    opencode_api_key: str = ""
+    opencode_model: str = "mimo-v2.5"  # cheapest ($0.14/M input), reasoning model
+    opencode_base_url: str = "https://opencode.ai/zen/go/v1"
+
 
 # Singleton — import this everywhere
 settings = Settings()

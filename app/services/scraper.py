@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 from app.config import settings
 from app.models.stock import Post, StockMention
 from app.services.ticker_extractor import extract_ticker_mentions
+from app.services.ticker_extractor_llm import extract_tickers_llm
 from app.services.sentiment import analyze_sentiment
 
 logger = logging.getLogger(__name__)
@@ -74,6 +75,17 @@ def _fetch_comments(session: requests.Session, post_id: str, limit: int) -> str:
         return ""
 
 
+def _merge_mentions(regex_mentions: list, llm_tickers: list) -> list:
+    """Merge regex and LLM ticker results, deduplicating by ticker."""
+    seen = {m["ticker"] for m in regex_mentions}
+    merged = list(regex_mentions)
+    for t in llm_tickers:
+        if t not in seen:
+            seen.add(t)
+            merged.append({"ticker": t, "count": 1})
+    return merged
+
+
 def scrape_subreddit(db: Session) -> int:
     """Fetch posts from r/valueinvesting, save new ones to DB. Returns count of new posts."""
     saved_count = 0
@@ -110,7 +122,9 @@ def scrape_subreddit(db: Session) -> int:
         time.sleep(0.5)
 
         post_text = " ".join(filter(None, [post.title, post.body, comment_text]))
-        mentions = extract_ticker_mentions(post_text)
+        regex_mentions = extract_ticker_mentions(post_text)
+        llm_tickers = extract_tickers_llm(post_text)
+        mentions = _merge_mentions(regex_mentions, llm_tickers)
         sentiment_score = analyze_sentiment(post_text) if mentions else None
         if mentions:
             for mention in mentions:
