@@ -4,7 +4,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
 from app.database import engine, Base
-from app.routers import recommendations, tickers, scrape
+from app.routers import recommendations, tickers, scrape, fundamentals
 from app.scheduler import start_scheduler
 
 
@@ -27,6 +27,7 @@ app = FastAPI(
 app.include_router(recommendations.router)
 app.include_router(tickers.router)
 app.include_router(scrape.router)
+app.include_router(fundamentals.router)
 
 
 @app.get("/")
