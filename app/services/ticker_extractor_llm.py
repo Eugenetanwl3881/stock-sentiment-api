@@ -15,13 +15,15 @@ from app.config import settings
 
 logger = logging.getLogger(__name__)
 
-_PROMPT = """Extract stock ticker symbols from this Reddit post. Return ONLY a JSON array of ticker strings. Rules:
-- Convert ALL company names to tickers: "Apple" → AAPL, "Google" → GOOGL, "Microsoft" → MSFT, "Amazon" → AMZN, "Berkshire Hathaway" → BRK.B, "JPMorgan" or "JP Morgan" → JPM, "Nvidia" → NVDA, "Tesla" → TSLA, "Meta" or "Facebook" → META, "Netflix" → NFLX. Apply similar name-to-ticker conversion for ANY company mentioned by name.
-- Include tickers that appear directly (NVDA, TSLA, MSFT, etc.).
-- Include tickers that appear with $ prefix ($AAPL, $T, $O).
-- Use context to decide: if a short word like T, A, D, O, IT, SO, MET, ICE, FAST, APP is clearly used as a stock ticker (e.g. "I bought T", "$O is great", "MET stock"), include it. If it's used as a common English word (e.g. "I want to buy a T-shirt", "it is so good"), skip it.
+_PROMPT = """Extract stock ticker symbols from this Reddit post. Return ONLY a JSON array of ticker strings.
+
+Rules:
+- Convert company names to tickers (e.g. "Apple" → AAPL, "Nvidia" → NVDA, "Google" → GOOGL, "Microsoft" → MSFT, "Berkshire Hathaway" → BRK.B, "JPMorgan" → JPM). Apply this for any company.
+- Include tickers that appear directly in the text.
+- Include tickers with $ prefix.
+- Use context: if a short word is used as a stock ticker (e.g. "I bought T", "MET stock"), include it. If it's a common English word, skip it.
 - Return empty array [] if no real stocks are mentioned.
-- Be thorough — extract EVERY ticker or company name in the text.
+- Be thorough — extract EVERY ticker or company name.
 
 Text:
 {text}
