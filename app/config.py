@@ -17,6 +17,7 @@ class Settings(BaseSettings):
     reddit_subreddit: str = "valueinvesting"
     reddit_post_limit: int = 100
     reddit_sort: str = "hot"  # hot, new, top, rising
+    reddit_comment_limit: int = 5  # top-N comments to fetch per post (0 = skip)
     reddit_user_agent: str = "stock-sentiment-api/1.0"
 
     # ── Database ────────────────────────────────────────────────

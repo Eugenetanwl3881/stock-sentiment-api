@@ -50,6 +50,30 @@ def _parse_post(data: dict) -> dict:
     }
 
 
+def _fetch_comments(session: requests.Session, post_id: str, limit: int) -> str:
+    """Fetch top-N comments for a post. Returns concatenated comment bodies."""
+    if limit <= 0:
+        return ""
+    try:
+        url = f"{REDDIT_BASE}/comments/{post_id}.json?limit={limit}&depth=1&raw_json=1"
+        resp = session.get(url, timeout=15)
+        resp.raise_for_status()
+        data = resp.json()
+        # Reddit returns [post_data, comments_data]
+        if len(data) < 2:
+            return ""
+        comments = data[1]["data"]["children"]
+        bodies = []
+        for child in comments:
+            body = child["data"].get("body", "").strip()
+            if body and body != "[deleted]" and body != "[removed]":
+                bodies.append(body)
+        return " ".join(bodies)
+    except Exception:
+        logger.debug("Failed to fetch comments for post %s", post_id)
+        return ""
+
+
 def scrape_subreddit(db: Session) -> int:
     """Fetch posts from r/valueinvesting, save new ones to DB. Returns count of new posts."""
     saved_count = 0
@@ -79,7 +103,13 @@ def scrape_subreddit(db: Session) -> int:
             continue
 
         post = Post(**parsed)
-        post_text = " ".join(filter(None, [post.title, post.body]))
+        comment_text = _fetch_comments(
+            session, parsed["reddit_id"], settings.reddit_comment_limit
+        )
+        # slight delay between comment fetches to be polite
+        time.sleep(0.5)
+
+        post_text = " ".join(filter(None, [post.title, post.body, comment_text]))
         mentions = extract_ticker_mentions(post_text)
         sentiment_score = analyze_sentiment(post_text) if mentions else None
         if mentions:
