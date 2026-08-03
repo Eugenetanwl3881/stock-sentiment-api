@@ -107,28 +107,62 @@ def _raw(nested: dict, key: str) -> Optional[float]:
 
 
 def _score(metrics: dict) -> float:
-    """Score fundamentals 0–100 with simple value-investing heuristics."""
-    score = 50.0  # neutral baseline
+    """Score fundamentals 0–100 with graduated value-investing heuristics.
+
+    Each metric uses ranges (not binary) so scores actually vary.
+    """
+    score = 25.0  # lower baseline so bonuses create real spread
 
     pe = metrics.get("pe_ratio")
-    if pe is not None and 0 < pe < 25:
-        score += 10
+    if pe is not None and pe > 0:
+        if pe < 10:
+            score += 20
+        elif pe < 15:
+            score += 15
+        elif pe < 20:
+            score += 10
+        elif pe < 30:
+            score += 5
 
     rg = metrics.get("revenue_growth")
-    if rg is not None and rg > 0.05:
-        score += 15
+    if rg is not None:
+        if rg > 0.20:
+            score += 20
+        elif rg > 0.10:
+            score += 15
+        elif rg > 0.05:
+            score += 10
+        elif rg > 0:
+            score += 5
 
     roe = metrics.get("roe")
-    if roe is not None and roe > 0.10:
-        score += 10
+    if roe is not None:
+        if roe > 0.30:
+            score += 20
+        elif roe > 0.20:
+            score += 15
+        elif roe > 0.10:
+            score += 10
+        elif roe > 0.05:
+            score += 5
 
     de = metrics.get("debt_to_equity")
-    if de is not None and de < 100:
-        score += 10
+    if de is not None:
+        if de < 20:
+            score += 15
+        elif de < 50:
+            score += 10
+        elif de < 100:
+            score += 5
 
     pm = metrics.get("profit_margins")
-    if pm is not None and pm > 0.10:
-        score += 10
+    if pm is not None:
+        if pm > 0.30:
+            score += 15
+        elif pm > 0.20:
+            score += 10
+        elif pm > 0.10:
+            score += 5
 
     return min(score, 100.0)
 

@@ -17,11 +17,11 @@ _FUNDAMENTALS_WEIGHT = 0.6
 
 
 def _rating(composite: float) -> str:
-    if composite >= 70:
+    if composite >= 85:
         return "Strong Buy"
-    if composite >= 55:
+    if composite >= 70:
         return "Buy"
-    if composite >= 40:
+    if composite >= 50:
         return "Hold"
     return "Avoid"
 
@@ -69,7 +69,7 @@ def generate_recommendations(db: Session, limit: int = 20) -> List[dict]:
         .group_by(StockMention.ticker)
         .order_by(
             (
-                _SENTIMENT_WEIGHT * func.avg(StockMention.sentiment_score)
+                _SENTIMENT_WEIGHT * (func.avg(StockMention.sentiment_score) + 1) * 50
                 + _FUNDAMENTALS_WEIGHT * StockFundamentals.fundamentals_score
             ).desc()
         )
@@ -80,8 +80,10 @@ def generate_recommendations(db: Session, limit: int = 20) -> List[dict]:
     results: List[dict] = []
     for row in rows:
         ticker, mention_count, avg_sentiment, fundamentals_score, sector = row
+        # Normalize sentiment from -1..+1 to 0..100 so both inputs have equal weight
+        sentiment_100 = (float(avg_sentiment) + 1) * 50
         composite = round(
-            (float(avg_sentiment) * _SENTIMENT_WEIGHT)
+            (sentiment_100 * _SENTIMENT_WEIGHT)
             + (float(fundamentals_score) * _FUNDAMENTALS_WEIGHT),
             1,
         )
