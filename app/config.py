@@ -28,6 +28,7 @@ class Settings(BaseSettings):
     schedule_scrape_minute: int = 0
 
     # ── Server ──────────────────────────────────────────────────
+    app_version: str = "1.0.0"
     host: str = "0.0.0.0"
     port: int = 8000
     debug: bool = True
