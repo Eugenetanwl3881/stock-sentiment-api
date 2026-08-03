@@ -43,8 +43,68 @@ def _get_crumb() -> str:
     return _CRUMB
 
 
+def _fetch_price_history(ticker: str) -> dict:
+    """Fetch 1M/3M/6M high prices and current price from Yahoo chart API."""
+    try:
+        crumb = _get_crumb()
+        # 6 months of daily data
+        url = f"https://query2.finance.yahoo.com/v8/finance/chart/{ticker}"
+        params = {
+            "range": "6mo",
+            "interval": "1d",
+            "crumb": crumb,
+        }
+        resp = _SESSION.get(url, params=params, timeout=15)
+        resp.raise_for_status()
+        data = resp.json()
+        result = data.get("chart", {}).get("result", [])
+        if not result:
+            logger.warning("Price history: no chart data for %s", ticker)
+            return {}
+        quotes = result[0].get("indicators", {}).get("quote", [{}])[0]
+        timestamps = result[0].get("timestamp", [])
+        highs = quotes.get("high", [])
+        closes = quotes.get("close", [])
+
+        if not highs or not closes or not timestamps:
+            logger.warning("Price history: missing OHLC data for %s", ticker)
+            return {}
+
+        now = timestamps[-1]
+        current = closes[-1] if closes[-1] is not None else None
+
+        # Compute highs over different windows
+        def high_since(days: int) -> Optional[float]:
+            cutoff = now - days * 86400
+            vals = [h for t, h in zip(timestamps, highs) if t >= cutoff and h is not None]
+            return max(vals) if vals else None
+
+        high_1m = high_since(30)
+        high_3m = high_since(90)
+
+        # Discount from 3-month high (negative = below high, positive = above)
+        discount_3m = None
+        if current and high_3m and high_3m > 0:
+            discount_3m = round(((current - high_3m) / high_3m) * 100, 1)
+
+        logger.debug(
+            "Price history for %s: current=%.2f 1M_high=%.2f 3M_high=%.2f discount=%.1f%%",
+            ticker, current or 0, high_1m or 0, high_3m or 0, discount_3m or 0,
+        )
+
+        return {
+            "price_current": current,
+            "price_1m_high": high_1m,
+            "price_3m_high": high_3m,
+            "discount_3m_pct": discount_3m,
+        }
+    except Exception:
+        logger.warning("Price history fetch failed for %s", ticker, exc_info=True)
+        return {}
+
+
 def _fetch_metrics(ticker: str) -> Optional[dict]:
-    """Pull key metrics directly from Yahoo Finance API. Returns None on failure."""
+    """Pull key metrics + price history from Yahoo Finance API."""
     for attempt in range(3):
         try:
             crumb = _get_crumb()
@@ -58,7 +118,7 @@ def _fetch_metrics(ticker: str) -> Optional[dict]:
             if resp.status_code == 429:
                 wait = (attempt + 1) * 30
                 logger.warning("Rate-limited, waiting %ds (attempt %d/3)", wait, attempt + 1)
-                _CRUMB = None  # invalidate crumb
+                _CRUMB = None
                 time.sleep(wait)
                 continue
 
@@ -73,7 +133,7 @@ def _fetch_metrics(ticker: str) -> Optional[dict]:
             fd = r.get("financialData") or {}
             dks = r.get("defaultKeyStatistics") or {}
 
-            return {
+            metrics = {
                 "ticker": ticker.upper(),
                 "pe_ratio": _raw(sd, "trailingPE"),
                 "forward_pe": _raw(sd, "forwardPE"),
@@ -85,6 +145,12 @@ def _fetch_metrics(ticker: str) -> Optional[dict]:
                 "market_cap": _raw(r.get("price") or {}, "marketCap"),
                 "sector": ap.get("sector"),
             }
+
+            # Merge price history
+            price_data = _fetch_price_history(ticker)
+            metrics.update(price_data)
+
+            return metrics
         except Exception as exc:
             msg = str(exc)
             if "429" in msg:
@@ -163,6 +229,14 @@ def _score(metrics: dict) -> float:
             score += 10
         elif pm > 0.10:
             score += 5
+
+    # Discount bonus: stocks down 5-15% from 3M high = potential opportunity
+    discount = metrics.get("discount_3m_pct")
+    if discount is not None:
+        if -15 <= discount <= -5:
+            score += 10  # healthy pullback — buying opportunity
+        elif -5 < discount < 0:
+            score += 5   # slight dip
 
     return min(score, 100.0)
 

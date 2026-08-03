@@ -60,6 +60,7 @@ def generate_recommendations(db: Session, limit: int = 20) -> List[dict]:
             func.avg(StockMention.sentiment_score).label("avg_sentiment"),
             StockFundamentals.fundamentals_score,
             StockFundamentals.sector,
+            StockFundamentals.discount_3m_pct,
         )
         .join(  # INNER JOIN — only rows where fundamentals exist
             StockFundamentals,
@@ -79,7 +80,7 @@ def generate_recommendations(db: Session, limit: int = 20) -> List[dict]:
 
     results: List[dict] = []
     for row in rows:
-        ticker, mention_count, avg_sentiment, fundamentals_score, sector = row
+        ticker, mention_count, avg_sentiment, fundamentals_score, sector, discount_3m = row
         # Normalize sentiment from -1..+1 to 0..100 so both inputs have equal weight
         sentiment_100 = (float(avg_sentiment) + 1) * 50
         composite = round(
@@ -92,6 +93,7 @@ def generate_recommendations(db: Session, limit: int = 20) -> List[dict]:
             "mention_count": mention_count,
             "avg_sentiment": round(float(avg_sentiment), 3),
             "fundamentals_score": fundamentals_score,
+            "discount_3m_pct": discount_3m,
             "composite": composite,
             "rating": _rating(composite),
             "sector": sector or "N/A",

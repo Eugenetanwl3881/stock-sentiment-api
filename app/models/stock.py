@@ -86,6 +86,11 @@ class StockFundamentals(Base):
     market_cap: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
     sector: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
     fundamentals_score: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    # Price / momentum data
+    price_current: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    price_1m_high: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    price_3m_high: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    discount_3m_pct: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
     updated_at: Mapped[datetime] = mapped_column(
         default=lambda: datetime.now(timezone.utc),
     )

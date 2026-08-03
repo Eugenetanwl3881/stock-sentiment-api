@@ -23,12 +23,13 @@ if __name__ == "__main__":
         if not recs:
             print("No recommendations — need both sentiment and fundamentals data.")
         else:
-            print(f"{'#':<3} {'Ticker':<6} {'Composite':>9} {'Rating':<12} {'Mentions':>8}  Sector")
-            print("-" * 65)
+            print(f"{'#':<3} {'Ticker':<6} {'Score':>6} {'Rating':<12} {'Ment':>4}  {'Disc%':>6}  Sector")
+            print("-" * 70)
             for i, r in enumerate(recs, 1):
+                disc = f"{r.get('discount_3m_pct', 0) or 0:+.1f}" if r.get('discount_3m_pct') is not None else "   N/A"
                 print(
-                    f"{i:<3} {r['ticker']:<6} {r['composite']:>9.1f} "
-                    f"{r['rating']:<12} {r['mention_count']:>8}  {r['sector']}"
+                    f"{i:<3} {r['ticker']:<6} {r['composite']:>6.1f} "
+                    f"{r['rating']:<12} {r['mention_count']:>4}  {disc:>6}  {r['sector']}"
                 )
     finally:
         db.close()
