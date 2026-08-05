@@ -67,7 +67,12 @@ def generate_recommendations(db: Session, limit: int = 20) -> List[dict]:
             StockMention.ticker == StockFundamentals.ticker,
         )
         .filter(StockMention.sentiment_score != None)
-        .group_by(StockMention.ticker)
+        .group_by(
+            StockMention.ticker,
+            StockFundamentals.fundamentals_score,
+            StockFundamentals.sector,
+            StockFundamentals.discount_3m_pct,
+        )
         .order_by(
             (
                 _SENTIMENT_WEIGHT * (func.avg(StockMention.sentiment_score) + 1) * 50
