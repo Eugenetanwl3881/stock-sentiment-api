@@ -34,11 +34,16 @@ JSON:"""
 def extract_tickers_llm(text: str) -> List[str]:
     """Use an LLM to extract ticker symbols from text. Returns list of tickers."""
     if not settings.opencode_api_key:
-        logger.debug("No ap _key set — skipping LLM extraction")
+        return []
+
+    if not settings.opencode_enabled:
+        logger.debug("LLM disabled — set OPENCODE_ENABLED=true in .env")
         return []
 
     if not text or len(text) < 10:
         return []
+
+    logger.info("LLM extraction starting for text (%d chars)...", len(text))
 
     try:
         start = time.monotonic()
@@ -56,7 +61,7 @@ def extract_tickers_llm(text: str) -> List[str]:
                 "max_tokens": 1000,
                 "temperature": 0,
             },
-            timeout=30,
+            timeout=60,
         )
         resp.raise_for_status()
         payload = resp.json()

@@ -38,6 +38,7 @@ class Settings(BaseSettings):
     opencode_api_key: str = ""
     opencode_model: str = "mimo-v2.5"  # cheapest ($0.14/M input), reasoning model
     opencode_base_url: str = "https://opencode.ai/zen/go/v1"
+    opencode_enabled: bool = False  # set to True to enable LLM extraction during scrapes
 
 
 # Singleton — import this everywhere

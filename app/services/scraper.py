@@ -123,7 +123,8 @@ def scrape_subreddit(db: Session) -> int:
 
         post_text = " ".join(filter(None, [post.title, post.body, comment_text]))
         regex_mentions = extract_ticker_mentions(post_text)
-        llm_tickers = extract_tickers_llm(post_text)
+        # LLM only when explicitly enabled in config
+        llm_tickers = extract_tickers_llm(post_text) if settings.opencode_enabled else []
         mentions = _merge_mentions(regex_mentions, llm_tickers)
         sentiment_score = analyze_sentiment(post_text) if mentions else None
         if mentions:
